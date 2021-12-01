@@ -58,9 +58,11 @@ convert:
   br i1 %check_convertloop, label %solve, label %convert
 
 solve:
-  %result = call i32 @solve_1([2000 x i32]* %converted_lines)
+  %result.1 = call i32 @solve_1([2000 x i32]* %converted_lines)
+  %result.2 = call i32 @solve_2([2000 x i32]* %converted_lines)
 
-  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strformat, i64 0, i64 0), i32 %result)
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strformat, i64 0, i64 0), i32 %result.1)
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strformat, i64 0, i64 0), i32 %result.2)
 
   ret i32 0
 }
@@ -99,6 +101,61 @@ nextindex:
   store i64 %ix.tmp, i64* %ix
   store i64 %ix.prev.tmp, i64* %ix.prev
   %checkend = icmp eq i64 %ix.val, 2000
+  br i1 %checkend, label %return, label %loop
+
+return:
+  %result.end = load i32, i32* %result
+  ret i32 %result.end
+}
+
+
+define i32 @solve_2([2000 x i32]* %lines) {
+  ; Store the number of increments
+  %result = alloca i32
+  store i32 -1, i32* %result
+  ; Store the three indexes into the array
+  %ix.1 = alloca i64
+  %ix.2 = alloca i64
+  %ix.3 = alloca i64
+  store i64 0, i64* %ix.1
+  store i64 1, i64* %ix.2
+  store i64 2, i64* %ix.3
+  ; Track the previous sum value
+  %sum.prev = alloca i32
+  store i32 0, i32* %sum.prev
+  br label %loop
+
+loop:
+  %ix.1.val = load i64, i64* %ix.1
+  %ix.2.val = load i64, i64* %ix.2
+  %ix.3.val = load i64, i64* %ix.3
+  %x.1 = getelementptr inbounds [2000 x i32], [2000 x i32]* %lines, i64 0, i64 %ix.1.val
+  %x.2 = getelementptr inbounds [2000 x i32], [2000 x i32]* %lines, i64 0, i64 %ix.2.val
+  %x.3 = getelementptr inbounds [2000 x i32], [2000 x i32]* %lines, i64 0, i64 %ix.3.val
+  %x.1.val = load i32, i32* %x.1
+  %x.2.val = load i32, i32* %x.2
+  %x.3.val = load i32, i32* %x.3
+  %sum.tmp = add i32 %x.1.val, %x.2.val
+  %sum = add i32 %sum.tmp, %x.3.val
+  %sum.prev.val = load i32, i32* %sum.prev
+  %is_inc = icmp slt i32 %sum.prev.val, %sum
+  store i32 %sum, i32* %sum.prev
+  br i1 %is_inc, label %incresult, label %nextindex
+
+incresult:
+  %result.val = load i32, i32* %result
+  %result.tmp = add i32 %result.val, 1
+  store i32 %result.tmp, i32* %result
+  br label %nextindex
+
+nextindex:
+  %ix.1.tmp = add i64 %ix.1.val, 1
+  %ix.2.tmp = add i64 %ix.2.val, 1
+  %ix.3.tmp = add i64 %ix.3.val, 1
+  store i64 %ix.1.tmp, i64* %ix.1
+  store i64 %ix.2.tmp, i64* %ix.2
+  store i64 %ix.3.tmp, i64* %ix.3
+  %checkend = icmp eq i64 %ix.3.val, 2000
   br i1 %checkend, label %return, label %loop
 
 return:
