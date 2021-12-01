@@ -14,11 +14,11 @@ declare i32 @printf(i8*, ...)
 declare i32 @atoi(i8*)
 
 define i32 @main() {
-  %rval = alloca i32
   %lineno = alloca i64
+  store i64 0, i64* %lineno
   %converted_lines = alloca [2000 x i32]
   %current_line = alloca i64
-  store i64 0, i64* %lineno
+  store i64 0, i64* %current_line
   %lines = alloca [2000 x [50 x i8]]
 
   %file = call %struct._IO_FILE* @fopen(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @input_file, i64 0, i64 0), i8* getelementptr inbounds ([2 x i8], [2 x i8]* @r, i64 0, i64 0))
