@@ -68,43 +68,30 @@ solve:
 }
 
 define i32 @solve_1([2000 x i32]* %lines) {
-  ; Store the number of increments
-  %result = alloca i32
-  store i32 0, i32* %result
-  ; Store the index into the array (start at 1 because first entry can't affect result)
-  %ix = alloca i64
-  store i64 1, i64* %ix
-  ; Store the index into the previous entry in the array
-  %ix.prev = alloca i64
-  store i64 0, i64* %ix.prev
   br label %loop
 
 loop:
-  %ix.val = load i64, i64* %ix
-  %ix.prev.val = load i64, i64* %ix.prev
-  %x = getelementptr inbounds [2000 x i32], [2000 x i32]* %lines, i64 0, i64 %ix.val
-  %x.prev = getelementptr inbounds [2000 x i32], [2000 x i32]* %lines, i64 0, i64 %ix.prev.val
+  %result = phi i32 [0, %0], [%result.new, %nextindex]
+  %ix.prev = phi i64 [0, %0], [%ix, %nextindex]
+  %ix = add i64 %ix.prev, 1
+  %x = getelementptr inbounds [2000 x i32], [2000 x i32]* %lines, i64 0, i64 %ix
+  %x.prev = getelementptr inbounds [2000 x i32], [2000 x i32]* %lines, i64 0, i64 %ix.prev
   %x.val = load i32, i32* %x
   %x.prev.val = load i32, i32* %x.prev
   %is_inc = icmp slt i32 %x.prev.val, %x.val
   br i1 %is_inc, label %incresult, label %nextindex
 
 incresult:
-  %result.val = load i32, i32* %result
-  %result.tmp = add i32 %result.val, 1
-  store i32 %result.tmp, i32* %result
+  %result.tmp = add i32 %result, 1
   br label %nextindex
 
 nextindex:
-  %ix.tmp = add i64 %ix.val, 1
-  %ix.prev.tmp = add i64 %ix.prev.val, 1
-  store i64 %ix.tmp, i64* %ix
-  store i64 %ix.prev.tmp, i64* %ix.prev
-  %checkend = icmp eq i64 %ix.val, 2000
+  %result.new = phi i32 [%result, %loop], [%result.tmp, %incresult]
+  %checkend = icmp eq i64 %ix, 2000
   br i1 %checkend, label %return, label %loop
 
 return:
-  %result.end = load i32, i32* %result
+  %result.end = phi i32 [%result, %nextindex]
   ret i32 %result.end
 }
 
